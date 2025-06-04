@@ -20,7 +20,7 @@ A desktop GPA calculator built with Python and Tkinter. Designed to help student
 
 ### 🔗 Download the `.exe`:
 
-📥 [Download gpa_calculator.exe](./gpa_calculator.exe)
+📥 Download gpa_calculator.exe from the releases.
 
 > Double-click to run. No install required.  
 > If Windows shows a warning, click “More info” → “Run anyway”.
