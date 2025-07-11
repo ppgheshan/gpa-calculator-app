@@ -105,6 +105,20 @@ def export_record(record_output):
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
+def delete_selected_record(record_list, record_output):
+    try:
+        selected = record_list.get(record_list.curselection())
+        confirm = messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete {selected}?")
+        if confirm:
+            file_path = os.path.join("gpa_records", selected)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                load_records(record_list)
+                record_output.delete(1.0, tk.END)
+                messagebox.showinfo("Deleted", f"{selected} deleted successfully.")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
 # GPA Graph
 def plot_gpa_graph():
     if not os.path.exists("gpa_records"):
@@ -123,13 +137,40 @@ def plot_gpa_graph():
         messagebox.showinfo("No Data", "No data to plot.")
         return
 
-    plt.bar(names, gpas, color='teal')
-    plt.xlabel("Student")
-    plt.ylabel("GPA")
-    plt.title("GPA Comparison")
+    fig, ax = plt.subplots()
+    bars = ax.bar(names, gpas, color='teal')
+
+    ax.set_xlabel("Student")
+    ax.set_ylabel("GPA")
+    ax.set_title("GPA Comparison")
     plt.xticks(rotation=45)
     plt.tight_layout()
+
+    # Tooltip text
+    tooltip = ax.annotate(
+        "", xy=(0, 0), xytext=(10, 10), textcoords="offset points",
+        bbox=dict(boxstyle="round", fc="w"),
+        arrowprops=dict(arrowstyle="->")
+    )
+    tooltip.set_visible(False)
+
+    def on_motion(event):
+        visible = False
+        for bar, name, gpa in zip(bars, names, gpas):
+            if bar.contains(event)[0]:
+                tooltip.xy = (bar.get_x() + bar.get_width() / 2, bar.get_height())
+                tooltip.set_text(f"{name}\nGPA: {gpa}")
+                tooltip.set_visible(True)
+                fig.canvas.draw_idle()
+                visible = True
+                break
+        if not visible:
+            tooltip.set_visible(False)
+            fig.canvas.draw_idle()
+
+    fig.canvas.mpl_connect("motion_notify_event", on_motion)
     plt.show()
+
 
 def show_help():
     help_win = tk.Toplevel()
@@ -240,6 +281,8 @@ record_list = tk.Listbox(view, width=50)
 record_list.pack(pady=5)
 
 tk.Button(view, text="📄 View Selected", command=lambda: view_selected_record(record_list, record_output),bg="#d3d3d3").pack(pady=5)
+tk.Button(view, text="🗑 Delete Selected", command=lambda: delete_selected_record(record_list, record_output), bg="#f44336", fg="white").pack(pady=5)
+
 record_output = tk.Text(view, width=80, height=20)
 record_output.pack(pady=5)
 
